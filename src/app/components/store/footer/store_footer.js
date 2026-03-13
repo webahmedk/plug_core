@@ -1,63 +1,158 @@
 'use client';
 
-import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
-import { classNames } from 'primereact/utils';
-import Link from 'next/link';
+import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
+import Link from "next/link";
 
 export default function StoreFooter() {
   return (
-    <footer className="bg-gray-800 text-gray-200 dark:bg-gray-900 py-12 px-6 md:px-16">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-gray-900 text-gray-300">
 
-        {/* Brand Section */}
-        <div>
-          <h2 className="text-2xl font-bold text-indigo-500 mb-4">Plug-Core</h2>
-          <p className="text-gray-400">
-            Streetwear essentials: Ponchos, T-Shirts, Baggy Pants & Hoodies.  
-            Stay stylish, comfortable, and unique.
+      <div className="max-w-7xl mx-auto px-8 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
+
+        {/* Brand */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-white">
+            Plug-Core
+          </h2>
+
+          <p className="text-sm text-gray-400 leading-relaxed">
+            Streetwear essentials including ponchos, t-shirts, hoodies and baggy
+            pants designed for comfort and everyday style.
           </p>
         </div>
 
-        {/* Quick Links */}
-        <div>
-          <h3 className="font-semibold mb-4">Quick Links</h3>
-          <ul className="space-y-2">
-            <li><Link href="/" className="hover:text-indigo-400 transition-colors">Home</Link></li>
-            <li><Link href="/store" className="hover:text-indigo-400 transition-colors">All Products</Link></li>
-            <li><Link href="/categories" className="hover:text-indigo-400 transition-colors">Categories</Link></li>
-            <li><Link href="/orders" className="hover:text-indigo-400 transition-colors">Orders</Link></li>
-            <li><Link href="/profile" className="hover:text-indigo-400 transition-colors">Profile</Link></li>
+        {/* Store Links */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-white tracking-wide">
+            Store
+          </h3>
+
+          <ul className="space-y-2 text-sm">
+            <li>
+              <Link href="/" className="hover:text-white transition">
+                Home
+              </Link>
+            </li>
+
+            <li>
+              <Link href="/products" className="hover:text-white transition">
+                Products
+              </Link>
+            </li>
+
+            <li>
+              <Link href="/categories" className="hover:text-white transition">
+                Categories
+              </Link>
+            </li>
+
+            <li>
+              <Link href="/orders" className="hover:text-white transition">
+                Orders
+              </Link>
+            </li>
           </ul>
         </div>
 
-        {/* Social Media */}
-        <div>
-          <h3 className="font-semibold mb-4">Follow Us</h3>
-          <div className="flex gap-4 text-xl">
-            <a href="#" className="hover:text-indigo-400 transition-colors"><i className="pi pi-facebook"></i></a>
-            <a href="#" className="hover:text-indigo-400 transition-colors"><i className="pi pi-instagram"></i></a>
-            <a href="#" className="hover:text-indigo-400 transition-colors"><i className="pi pi-twitter"></i></a>
-            <a href="#" className="hover:text-indigo-400 transition-colors"><i className="pi pi-youtube"></i></a>
-          </div>
+        {/* Account */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-white tracking-wide">
+            Account
+          </h3>
+
+          <ul className="space-y-2 text-sm">
+            <li>
+              <Link href="/profile" className="hover:text-white transition">
+                Profile
+              </Link>
+            </li>
+
+            <li>
+              <Link href="/settings" className="hover:text-white transition">
+                Settings
+              </Link>
+            </li>
+
+            <li>
+              <Link href="/wishlist" className="hover:text-white transition">
+                Wishlist
+              </Link>
+            </li>
+
+            <li>
+              <Link href="/cart" className="hover:text-white transition">
+                Cart
+              </Link>
+            </li>
+          </ul>
         </div>
 
         {/* Newsletter */}
-        <div>
-          <h3 className="font-semibold mb-4">Newsletter</h3>
-          <p className="text-gray-400 mb-3">Get the latest drops and exclusive offers.</p>
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-white tracking-wide">
+            Newsletter
+          </h3>
+
+          <p className="text-sm text-gray-400">
+            Get updates about new product drops and exclusive offers.
+          </p>
+
           <div className="flex gap-2">
-            <InputText placeholder="Your email" className="flex-1 p-2 rounded-md text-gray-800" />
-            <Button label="Subscribe" className="p-button-primary" />
+            <InputText
+              placeholder="Email address"
+              className="flex-1 text-sm"
+            />
+
+            <Button
+              label="Subscribe"
+              className="p-button-primary"
+            />
+          </div>
+
+          {/* Social */}
+          <div className="flex gap-4 text-lg pt-2">
+            <a href="#" className="hover:text-white">
+              <i className="pi pi-instagram"></i>
+            </a>
+
+            <a href="#" className="hover:text-white">
+              <i className="pi pi-twitter"></i>
+            </a>
+
+            <a href="#" className="hover:text-white">
+              <i className="pi pi-youtube"></i>
+            </a>
           </div>
         </div>
 
       </div>
 
-      {/* Bottom Note */}
-      <div className="mt-12 border-t border-gray-700 pt-6 text-center text-gray-500 text-sm">
-        &copy; {new Date().getFullYear()} Plug-Core. All rights reserved.
+      {/* Bottom bar */}
+      <div className="border-t border-gray-800">
+        <div className="max-w-7xl mx-auto px-8 py-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500">
+
+          <p>
+            © {new Date().getFullYear()} Plug-Core. All rights reserved.
+          </p>
+
+          <div className="flex gap-6 mt-3 md:mt-0">
+            <Link href="/privacy" className="hover:text-gray-300">
+              Privacy
+            </Link>
+
+            <Link href="/terms" className="hover:text-gray-300">
+              Terms
+            </Link>
+
+            <Link href="/contact" className="hover:text-gray-300">
+              Contact
+            </Link>
+          </div>
+
+        </div>
       </div>
+
     </footer>
   );
 }

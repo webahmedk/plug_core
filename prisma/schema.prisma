@@ -1,0 +1,450 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ────────────────────────────────────────────────
+// ENUMS
+// ────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  OPERATIONS_MANAGER
+  DESIGNER
+  SUPERVISOR
+  WORKER
+  CUSTOMER
+}
+
+enum OrderStatus {
+  DRAFT
+  PLACED
+  CONFIRMED
+  IN_PRODUCTION
+  READY_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
+  RETURNED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum ProductionStatus {
+  QUEUED
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+// ────────────────────────────────────────────────
+// MASTER DATA
+// ────────────────────────────────────────────────
+
+model states {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  code String @unique
+  name String @unique
+
+  cities cities[]
+}
+
+model cities {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  stateId String @db.ObjectId
+  name    String
+
+  state states  @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  areas areas[]
+}
+
+model areas {
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId
+  cityId  String  @db.ObjectId
+  name    String
+  pincode String?
+
+  city      cities              @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  addresses customer_address[]
+}
+
+// ────────────────────────────────────────────────
+// UNITS OF MEASUREMENT (now a table)
+// ────────────────────────────────────────────────
+
+model uom {
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  code       String  @unique // METER, KG, PIECE, ROLL, CONE, PACK, etc.
+  name       String // Meter, Kilogram, Piece, Roll, Cone, Pack
+  symbol     String? // m, kg, pc, roll, cone
+  category   String? // LENGTH, WEIGHT, COUNT, AREA, VOLUME
+  baseFactor Float? // for conversions (e.g. 1 METER → 100 if base is cm)
+  isActive   Boolean @default(true)
+
+  // rawMaterials RawMaterial[]
+}
+
+// ────────────────────────────────────────────────
+// USERS
+// ────────────────────────────────────────────────
+
+model users {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  mobile   String  @unique
+  email    String? @unique
+  username String  @unique
+  password String // hashed
+  role     Role
+
+  // productions     Production[]
+  // productionLogs  ProductionLog[]
+  // issuedMaterials RawMaterialIssued[] @relation("IssuedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+// ────────────────────────────────────────────────
+// CUSTOMERS
+// ────────────────────────────────────────────────
+
+model customers {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  mobile    String   @unique
+  email     String?  @unique
+
+  addresses customer_address[]
+  // orders    Order[]   // if you plan to link orders later
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model customer_address {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  customerId  String @db.ObjectId
+  areaId      String @db.ObjectId
+  addressLine String
+  landmark    String?
+  pincode     String
+  isDefault   Boolean @default(false)
+
+  customer customers @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  area     areas     @relation(fields: [areaId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+// ────────────────────────────────────────────────
+// CUSTOMERS
+// ────────────────────────────────────────────────
+
+// model Customer {
+//   id     String  @id @default(auto()) @map("_id") @db.ObjectId
+//   name   String
+//   mobile String  @unique
+//   email  String? @unique
+
+//   addresses    CustomerAddress[]
+//   orders       Order[]
+//   measurements CustomerMeasurement[]
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// // model CustomerAddress {
+// //   id          String  @id @default(auto()) @map("_id") @db.ObjectId
+// //   customerId  String  @db.ObjectId
+// //   areaId      String  @db.ObjectId
+// //   addressLine String
+// //   landmark    String?
+// //   pincode     String
+// //   isDefault   Boolean @default(false)
+
+// //   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+// //   area     Area     @relation(fields: [areaId], references: [id])
+
+// //   orders Order[]
+// // }
+
+// model CustomerMeasurement {
+//   id          String  @id @default(auto()) @map("_id") @db.ObjectId
+//   customerId  String? @db.ObjectId
+//   orderItemId String? @db.ObjectId
+
+//   length   Float?
+//   chest    Float?
+//   waist    Float?
+//   hip      Float?
+//   shoulder Float?
+//   sleeve   Float?
+//   neck     Float?
+//   remarks  String?
+
+//   customer  Customer?  @relation(fields: [customerId], references: [id])
+//   orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
+
+//   @@unique([customerId, orderItemId]) // prevent duplicates
+// }
+
+// // ────────────────────────────────────────────────
+// // PRODUCTS
+// // ────────────────────────────────────────────────
+
+// model Product {
+//   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+//   name        String
+//   description String?
+//   basePrice   Float?
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+
+//   variants   ProductVariant[]
+//   media      ProductMedia[]
+//   assemblies ProductAssembly[]
+// }
+
+// model ProductVariant {
+//   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+//   productId String   @db.ObjectId
+//   size      String?
+//   color     String?
+//   sku       String?  @unique
+//   price     Float
+//   createdAt DateTime @default(now())
+
+//   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+//   inventory  Inventory?
+//   orderItems OrderItem[]
+// }
+
+// model ProductMedia {
+//   id        String    @id @default(auto()) @map("_id") @db.ObjectId
+//   productId String    @db.ObjectId
+//   url       String
+//   type      MediaType
+//   isPrimary Boolean   @default(false)
+//   sortOrder Int       @default(0)
+
+//   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+// }
+
+// model ProductAssembly {
+//   id              String  @id @default(auto()) @map("_id") @db.ObjectId
+//   productId       String  @db.ObjectId
+//   name            String?
+//   quantityPerUnit Int     @default(1)
+
+//   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+// }
+
+// // ────────────────────────────────────────────────
+// // INVENTORY (finished goods)
+// // ────────────────────────────────────────────────
+
+// model Inventory {
+//   id               String   @id @default(auto()) @map("_id") @db.ObjectId
+//   productVariantId String   @unique @db.ObjectId
+//   quantity         Int      @default(0)
+//   updatedAt        DateTime @updatedAt
+
+//   variant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+// }
+
+// // ────────────────────────────────────────────────
+// // RAW MATERIALS
+// // ────────────────────────────────────────────────
+
+// model RawMaterial {
+//   id            String @id @default(auto()) @map("_id") @db.ObjectId
+//   unitId        String @db.ObjectId
+//   name          String
+//   currentStock  Float  @default(0)
+//   minStockAlert Float  @default(0)
+//   reorderQty    Float?
+
+//   unit UnitOfMeasurement @relation(fields: [unitId], references: [id])
+
+//   issued         RawMaterialIssued[]
+//   used           RawMaterialUsage[]
+//   customizations CustomizationMaterial[]
+// }
+
+// model RawMaterialIssued {
+//   id            String   @id @default(auto()) @map("_id") @db.ObjectId
+//   productionId  String   @db.ObjectId
+//   rawMaterialId String   @db.ObjectId
+//   quantity      Float
+//   issuedAt      DateTime @default(now())
+//   issuedById    String?  @db.ObjectId
+
+//   production Production  @relation(fields: [productionId], references: [id], onDelete: Cascade)
+//   material   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+//   issuedBy   User?       @relation("IssuedBy", fields: [issuedById], references: [id])
+// }
+
+// model RawMaterialUsage {
+//   id               String   @id @default(auto()) @map("_id") @db.ObjectId
+//   productionId     String   @db.ObjectId
+//   rawMaterialId    String   @db.ObjectId
+//   quantityUsed     Float
+//   quantityReturned Float?
+//   usedAt           DateTime @default(now())
+//   remarks          String?
+
+//   production Production  @relation(fields: [productionId], references: [id], onDelete: Cascade)
+//   material   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+// }
+
+// // ────────────────────────────────────────────────
+// // ORDERS
+// // ────────────────────────────────────────────────
+
+// model Order {
+//   id                String        @id @default(auto()) @map("_id") @db.ObjectId
+//   customerId        String        @db.ObjectId
+//   orderCode         String        @unique // ORD-2025-00001
+//   totalAmount       Float
+//   paymentStatus     PaymentStatus @default(PENDING)
+//   orderStatus       OrderStatus   @default(DRAFT)
+//   deliveryAddressId String?       @db.ObjectId
+//   remarks           String?
+//   createdAt         DateTime      @default(now())
+//   updatedAt         DateTime      @updatedAt
+
+//   customer        Customer         @relation(fields: [customerId], references: [id])
+//   deliveryAddress CustomerAddress? @relation(fields: [deliveryAddressId], references: [id])
+
+//   items    OrderItem[]
+//   payments Payment[]
+//   logs     OrderLog[]
+// }
+
+// model OrderItem {
+//   id               String @id @default(auto()) @map("_id") @db.ObjectId
+//   orderId          String @db.ObjectId
+//   productVariantId String @db.ObjectId
+//   quantity         Int
+//   unitPrice        Float // snapshot from variant at order time
+//   subtotal         Float
+
+//   order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+//   variant ProductVariant @relation(fields: [productVariantId], references: [id])
+
+//   customization OrderCustomization?
+//   measurement   CustomerMeasurement?
+
+//   productions Production[]
+// }
+
+// model OrderCustomization {
+//   id           String  @id @default(auto()) @map("_id") @db.ObjectId
+//   orderItemId  String  @unique @db.ObjectId
+//   instructions String?
+//   extraCost    Float   @default(0)
+
+//   orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+//   materials CustomizationMaterial[]
+// }
+
+// model CustomizationMaterial {
+//   id                   String @id @default(auto()) @map("_id") @db.ObjectId
+//   orderCustomizationId String @db.ObjectId
+//   rawMaterialId        String @db.ObjectId
+//   quantity             Float
+
+//   customization OrderCustomization @relation(fields: [orderCustomizationId], references: [id], onDelete: Cascade)
+//   material      RawMaterial        @relation(fields: [rawMaterialId], references: [id])
+// }
+
+// // ────────────────────────────────────────────────
+// // PAYMENTS
+// // ────────────────────────────────────────────────
+
+// model Payment {
+//   id            String        @id @default(auto()) @map("_id") @db.ObjectId
+//   orderId       String        @db.ObjectId
+//   amount        Float
+//   paymentMode   String // UPI, CARD, CASH, BANK_TRANSFER, ...
+//   status        PaymentStatus
+//   transactionId String?
+//   paidAt        DateTime?
+//   createdAt     DateTime      @default(now())
+
+//   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+// }
+
+// // ────────────────────────────────────────────────
+// // PRODUCTION
+// // ────────────────────────────────────────────────
+
+// model Production {
+//   id           String           @id @default(auto()) @map("_id") @db.ObjectId
+//   orderItemId  String           @db.ObjectId
+//   assignedToId String?          @db.ObjectId
+//   status       ProductionStatus @default(QUEUED)
+//   startedAt    DateTime?
+//   completedAt  DateTime?
+//   createdAt    DateTime         @default(now())
+//   updatedAt    DateTime         @updatedAt
+
+//   orderItem  OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+//   assignedTo User?     @relation(fields: [assignedToId], references: [id])
+
+//   issuedMaterials RawMaterialIssued[]
+//   usedMaterials   RawMaterialUsage[]
+//   logs            ProductionLog[]
+// }
+
+// model ProductionLog {
+//   id           String           @id @default(auto()) @map("_id") @db.ObjectId
+//   productionId String           @db.ObjectId
+//   statusBefore ProductionStatus
+//   statusAfter  ProductionStatus
+//   remarks      String?
+//   createdAt    DateTime         @default(now())
+
+//   production Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+//   user       User?      @relation(fields: [userId], references: [id])
+//   userId     String?    @db.ObjectId
+// }
+
+// // ────────────────────────────────────────────────
+// // LOGGING
+// // ────────────────────────────────────────────────
+
+// model OrderLog {
+//   id        String      @id @default(auto()) @map("_id") @db.ObjectId
+//   orderId   String      @db.ObjectId
+//   status    OrderStatus
+//   remarks   String?
+//   createdAt DateTime    @default(now())
+
+//   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+// }
